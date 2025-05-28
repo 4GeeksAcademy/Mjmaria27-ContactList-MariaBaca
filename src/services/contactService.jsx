@@ -1,59 +1,33 @@
-const BASE_URL = 'https://playground.4geeks.com/apis/fake/contact/';
-const AGENDA_SLUG = 'contacts_app';
+const BASE_URL = "https://playground.4geeks.com/contact/agendas";
+const AGENDA_SLUG = "mis-contactos";
 
+// Obtener contactos
 export const getContacts = async () => {
   try {
-    const res = await fetch(`${BASE_URL}agenda/${AGENDA_SLUG}`);
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : [];
+    const response = await fetch(`${BASE_URL}/${AGENDA_SLUG}/contacts`);
+    if (!response.ok) throw new Error("Error al obtener contactos");
+    return await response.json();
   } catch (error) {
-    console.error("Error obteniendo contactos:", error);
-    return [];
-  }
-};
-
-export const createContact = async (contact) => {
-  try {
-    const res = await fetch(BASE_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...contact, agenda_slug: AGENDA_SLUG }),
-    });
-
-    if (!res.ok) throw new Error('Error creando contacto');
-    return await res.json();
-  } catch (error) {
-    console.error("Error creando contacto:", error);
+    console.error("getContacts error:", error);
     throw error;
   }
 };
 
-export const updateContact = async (id, contact) => {
+// Crear contacto
+export const createContact = async (contactData) => {
   try {
-    const res = await fetch(`${BASE_URL}${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...contact, agenda_slug: AGENDA_SLUG }),
+    const response = await fetch(`${BASE_URL}/${AGENDA_SLUG}/contacts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        ...contactData,
+        agenda_slug: AGENDA_SLUG,
+      }),
     });
-
-    if (!res.ok) throw new Error('Error actualizando contacto');
-    return await res.json();
+    if (!response.ok) throw new Error("Error al crear contacto");
+    return await response.json();
   } catch (error) {
-    console.error("Error actualizando contacto:", error);
-    throw error;
-  }
-};
-
-export const deleteContact = async (id) => {
-  try {
-    const res = await fetch(`${BASE_URL}${id}`, {
-      method: 'DELETE',
-    });
-
-    if (!res.ok) throw new Error('Error eliminando contacto');
-  } catch (error) {
-    console.error("Error eliminando contacto:", error);
+    console.error("createContact error:", error);
     throw error;
   }
 };

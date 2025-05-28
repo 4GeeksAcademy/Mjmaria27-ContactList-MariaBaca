@@ -1,9 +1,11 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ContactProvider } from './context/ContactContext';
-import ContactList from './pages/ContactList';
-import AddContact from './pages/AddContact';
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ContactProvider } from "./context/ContactContext";
+import ContactList from "./pages/ContactList";
+import AddContact from "./pages/AddContact";
+import "bootstrap/dist/css/bootstrap.min.css";
 
-function App() {
+const App = () => {
   return (
     <ContactProvider>
       <BrowserRouter>
@@ -15,6 +17,6 @@ function App() {
       </BrowserRouter>
     </ContactProvider>
   );
-}
+};
 
 export default App;

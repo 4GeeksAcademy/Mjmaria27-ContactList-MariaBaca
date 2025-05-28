@@ -1,30 +1,60 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import * as api from '../services/contactService';
+import React, { createContext, useState, useEffect, useContext } from "react";
+import * as api from "../services/contactService";
 
 const ContactContext = createContext();
 
 export const ContactProvider = ({ children }) => {
-  // ... tu código del provider con estado, funciones, etc.
+  const [contacts, setContacts] = useState([]);
+
+  const fetchContacts = async () => {
+    const data = await api.getContacts();
+    setContacts(data);
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  const addContact = async (contact) => {
+    try {
+      await api.createContact(contact);
+      await fetchContacts();
+    } catch (error) {
+      console.error("Error al agregar contacto:", error);
+    }
+  };
+
+  const updateContact = async (id, contact) => {
+    try {
+      await api.updateContact(id, contact);
+      await fetchContacts();
+    } catch (error) {
+      console.error("Error al actualizar contacto:", error);
+    }
+  };
+
+  const deleteContact = async (id) => {
+    try {
+      await api.deleteContact(id);
+      await fetchContacts();
+    } catch (error) {
+      console.error("Error al eliminar contacto:", error);
+    }
+  };
 
   return (
-    <ContactContext.Provider value={{
-      contacts,
-      fetchContacts,
-      addContact,
-      updateContact,
-      deleteContact,
-      // cualquier otra cosa que exportes
-    }}>
+    <ContactContext.Provider
+      value={{ contacts, fetchContacts, addContact, updateContact, deleteContact }}
+    >
       {children}
     </ContactContext.Provider>
   );
 };
 
-// Este hook personalizado es para usar más fácil el contexto
 export const useContacts = () => {
   const context = useContext(ContactContext);
   if (!context) {
-    throw new Error('useContacts debe usarse dentro de un ContactProvider');
+    throw new Error("useContacts debe usarse dentro de un ContactProvider");
   }
   return context;
 };
