@@ -1,19 +1,20 @@
-// src/App.jsx
-import React from "react";
-import { Routes, Route } from "react-router-dom";
-import Layout from "./pages/Layout";
-import Contact from "./pages/Contact";
-import AddContact from "./pages/AddContact";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ContactProvider } from './context/ContactContext';
+import ContactList from './pages/ContactList';
+import AddContact from './pages/AddContact';
 
-const App = () => {
+function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Layout />}>
-        <Route index element={<Contact />} />
-        <Route path="add" element={<AddContact />} />
-      </Route>
-    </Routes>
+    <ContactProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<ContactList />} />
+          <Route path="/add" element={<AddContact />} />
+          <Route path="/edit/:id" element={<AddContact />} />
+        </Routes>
+      </BrowserRouter>
+    </ContactProvider>
   );
-};
+}
 
 export default App;
