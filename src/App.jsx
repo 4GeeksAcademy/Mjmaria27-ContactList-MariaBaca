@@ -1,22 +1,50 @@
-import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ContactProvider } from "./context/ContactContext";
-import ContactList from "./pages/ContactList";
+import React, { useEffect, useState } from "react";
 import AddContact from "./pages/AddContact";
-import "bootstrap/dist/css/bootstrap.min.css";
+import { getContacts } from "./services/contactService";
 
-const App = () => {
+export default function App() {
+  const [contacts, setContacts] = useState([]);
+  const [loadingContacts, setLoadingContacts] = useState(true);
+  const [errorContacts, setErrorContacts] = useState(null);
+
+  const fetchContacts = async () => {
+    try {
+      setLoadingContacts(true);
+      const data = await getContacts();
+      setContacts(data);
+    } catch (err) {
+      setErrorContacts("Error al cargar contactos");
+      console.error(err);
+    } finally {
+      setLoadingContacts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContacts();
+  }, []);
+
+  // Actualizar la lista cuando se crea un contacto nuevo
+  const handleContactCreated = (newContact) => {
+    setContacts((prev) => [...prev, newContact]);
+  };
+
   return (
-    <ContactProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<ContactList />} />
-          <Route path="/add" element={<AddContact />} />
-          <Route path="/edit/:id" element={<AddContact />} />
-        </Routes>
-      </BrowserRouter>
-    </ContactProvider>
-  );
-};
+    <div style={{ padding: "20px" }}>
+      <h1>Mi Lista de Contactos</h1>
 
-export default App;
+      <AddContact onContactCreated={handleContactCreated} />
+
+      {loadingContacts && <p>Cargando contactos...</p>}
+      {errorContacts && <p style={{ color: "red" }}>{errorContacts}</p>}
+
+      <ul>
+        {contacts.map((contact) => (
+          <li key={contact.id}>
+            <b>{contact.full_name}</b> - {contact.email} - {contact.phone}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
