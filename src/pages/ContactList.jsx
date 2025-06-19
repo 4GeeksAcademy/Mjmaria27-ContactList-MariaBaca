@@ -1,28 +1,33 @@
-import React from "react";
-import { useContacts } from "../context/ContactContext";
-import ContactCard from "../components/ContactCard";
-import { Link } from "react-router-dom";
+// src/pages/ContactList.jsx
 
-const ContactList = () => {
-  const { contacts } = useContacts();
+import React, { useContext } from 'react'
+import { Link }               from 'react-router-dom'
+import { ContactContext }     from '../context/ContactContext'
+import ContactCard            from '../components/ContactCard'
+
+export default function ContactList() {
+  const { contacts, loading } = useContext(ContactContext)
 
   return (
-    <div className="container mt-5">
+    <div className="container my-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>Lista de Contactos</h2>
+        <h2>Contacts</h2>
         <Link to="/add" className="btn btn-success">
-          Agregar Contacto
+          Add new contact
         </Link>
       </div>
-      {contacts.length === 0 ? (
-        <p>No hay contactos disponibles.</p>
+
+      {loading ? (
+        <p>Loading contacts…</p>
+      ) : contacts.length === 0 ? (
+        <p>No contacts found.</p>
       ) : (
-        contacts.map((contact) => (
-          <ContactCard key={contact.id} contact={contact} />
-        ))
+        <ul className="list-group list-group-flush">
+          {contacts.map(c => (
+            <ContactCard key={c.id} contact={c} />
+          ))}
+        </ul>
       )}
     </div>
-  );
-};
-
-export default ContactList;
+  )
+}

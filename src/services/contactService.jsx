@@ -1,84 +1,57 @@
-const BASE_URL = "https://playground.4geeks.com/contact/agendas/mis-contactos/contacts";
-const AGENDA_SLUG = "mis-contactos";
+// src/services/contactService.jsx
 
-// Obtener contactos
-export const getContacts = async () => {
-  try {
-    const response = await fetch(`${BASE_URL}/${AGENDA_SLUG}/contacts`);
-    if (!response.ok) throw new Error("Error al obtener contactos");
-    return await response.json();
-  } catch (error) {
-    console.error("getContacts error:", error);
-    throw error;
+const API_BASE     = 'https://playground.4geeks.com';
+const AGENDA_SLUG  = 'ContactList';
+const AGENDA_URL   = `${API_BASE}/contact/agendas/${AGENDA_SLUG}`;
+const CONTACTS_URL = `${AGENDA_URL}/contacts`;
+
+// Crear agenda si no existe
+export async function createAgenda() {
+  const res = await fetch(AGENDA_URL, { method: 'POST' });
+  if (!res.ok) throw new Error('Error al crear la agenda');
+  return res.json();
+}
+
+// Leer todos los contactos (array puro)
+export async function getContacts() {
+  const res = await fetch(CONTACTS_URL);
+  if (!res.ok) {
+    const err = new Error('Error al leer contactos');
+    err.status = res.status;
+    throw err;
   }
-};
+  return res.json();
+}
 
-// Crear contacto
-export const createContact = async (contactData) => {
-  try {
-    const response = await fetch(`${BASE_URL}/${AGENDA_SLUG}/contacts`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name: contactData.full_name,
-        email: contactData.email,
-        phone: contactData.phone,
-        address: contactData.address,
-        agenda_slug: AGENDA_SLUG,
-      }),
-    });
+// Crear nuevo contacto
+export async function createContact({ name, email, phone, address }) {
+  const payload = { name, email, phone, address };
+  const res = await fetch(CONTACTS_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Error al crear el contacto');
+  return res.json();
+}
 
-    if (!response.ok) {
-      const errorDetails = await response.json();
-      console.error("Detalles del error al crear:", errorDetails);
-      throw new Error("Error al crear contacto");
-    }
+// Actualizar contacto existente
+export async function updateContact(id, { name, email, phone, address }) {
+  const url = `${CONTACTS_URL}/${id}`;
+  const res = await fetch(url, {
+    method:  'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ name, email, phone, address }),
+  });
+  if (!res.ok) throw new Error('Error al actualizar el contacto');
+  return res.json();
+}
 
-    return await response.json();
-  } catch (error) {
-    console.error("createContact error:", error);
-    throw error;
-  }
-};
-
-// Eliminar contacto
-export const deleteContact = async (id) => {
-  try {
-    const response = await fetch(`${BASE_URL}/${AGENDA_SLUG}/contacts/${id}`, {
-      method: "DELETE",
-    });
-    if (!response.ok) throw new Error("Error al eliminar contacto");
-    return true;
-  } catch (error) {
-    console.error("deleteContact error:", error);
-    throw error;
-  }
-};
-
-// Editar contacto
-export const updateContact = async (id, contactData) => {
-  try {
-    const response = await fetch(`${BASE_URL}/${AGENDA_SLUG}/contacts/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        full_name: contactData.full_name,
-        email: contactData.email,
-        phone: contactData.phone,
-        address: contactData.address,
-        agenda_slug: AGENDA_SLUG,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorDetails = await response.json();
-      console.error("Detalles del error al actualizar:", errorDetails);
-      throw new Error("Error al actualizar contacto");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("updateContact error:", error);
-    throw error;
-  }
-};
+// ELIMINAR contacto: no parsear JSON vacío
+export async function deleteContact(id) {
+  const url = `${CONTACTS_URL}/${id}`;
+  const res = await fetch(url, { method: 'DELETE' });
+  if (!res.ok) throw new Error('Error al eliminar el contacto');
+  // La API no devuelve body, devolvemos void
+  return;
+}

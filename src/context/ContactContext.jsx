@@ -1,60 +1,69 @@
-import React, { createContext, useState, useEffect, useContext } from "react";
-import * as api from "../services/contactService";
+// src/context/ContactContext.jsx
+import React, { createContext, useState, useEffect } from 'react'
+import {
+  createAgenda,
+  getContacts,
+  createContact,
+  updateContact,
+  deleteContact
+} from '../services/contactService'
 
-const ContactContext = createContext();
+export const ContactContext = createContext()
 
-export const ContactProvider = ({ children }) => {
-  const [contacts, setContacts] = useState([]);
-
-  const fetchContacts = async () => {
-    const data = await api.getContacts();
-    setContacts(data);
-  };
+export function ContactProvider({ children }) {
+  const [contacts, setContacts] = useState([])
+  const [loading,  setLoading]  = useState(true)
 
   useEffect(() => {
-    fetchContacts();
-  }, []);
-
-  const addContact = async (contact) => {
-    try {
-      await api.createContact(contact);
-      await fetchContacts();
-    } catch (error) {
-      console.error("Error al agregar contacto:", error);
+    async function init() {
+      setLoading(true)
+      try {
+        await getContacts()
+      } catch (err) {
+        if (err.status === 404 || err.status === 422) {
+          await createAgenda()
+        } else {
+          console.error(err)
+        }
+      }
+      try {
+        const data = await getContacts()
+        setContacts(Array.isArray(data) ? data : [])
+      } catch (err) {
+        console.error(err)
+        setContacts([])
+      }
+      setLoading(false)
     }
-  };
+    init()
+  }, [])
 
-  const updateContact = async (id, contact) => {
-    try {
-      await api.updateContact(id, contact);
-      await fetchContacts();
-    } catch (error) {
-      console.error("Error al actualizar contacto:", error);
-    }
-  };
+  const addContact = async contact => {
+    const nuevo = await createContact(contact)
+    setContacts(prev => [...prev, nuevo])
+  }
 
-  const deleteContact = async (id) => {
-    try {
-      await api.deleteContact(id);
-      await fetchContacts();
-    } catch (error) {
-      console.error("Error al eliminar contacto:", error);
-    }
-  };
+  const editContact = async (id, contact) => {
+    const updated = await updateContact(id, contact)
+    setContacts(prev => prev.map(c => (c.id === id ? updated : c)))
+  }
+
+  const removeContact = async id => {
+    console.log('🔻 Removing in context id=', id)
+    await deleteContact(id)
+    setContacts(prev => {
+      console.log('🔻 Before remove, array=', prev)
+      const filtered = prev.filter(c => c.id !== id)
+      console.log('🔻 After remove, array=', filtered)
+      return filtered
+    })
+  }
 
   return (
     <ContactContext.Provider
-      value={{ contacts, fetchContacts, addContact, updateContact, deleteContact }}
+      value={{ contacts, loading, addContact, editContact, removeContact }}
     >
       {children}
     </ContactContext.Provider>
-  );
-};
-
-export const useContacts = () => {
-  const context = useContext(ContactContext);
-  if (!context) {
-    throw new Error("useContacts debe usarse dentro de un ContactProvider");
-  }
-  return context;
-};
+  )
+}

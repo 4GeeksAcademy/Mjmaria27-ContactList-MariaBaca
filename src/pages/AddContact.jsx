@@ -1,90 +1,91 @@
-import React, { useState } from "react";
-import { createContact } from "../services/contactService";
+// src/pages/AddContact.jsx
 
-export default function AddContact({ onContactCreated }) {
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    address: "",
-    description: "",
-  });
+import React, { useState, useContext, useEffect } from 'react'
+import { Link, useNavigate, useParams }         from 'react-router-dom'
+import { ContactContext }                       from '../context/ContactContext'
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export default function AddContact() {
+  const { contacts, addContact, editContact } = useContext(ContactContext)
+  const navigate = useNavigate()
+  const { id }   = useParams()
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const [form, setForm] = useState({
+    name:    '',
+    email:   '',
+    phone:   '',
+    address: ''
+  })
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const newContact = await createContact(formData);
-      alert("Contacto creado correctamente!");
-      setFormData({
-        full_name: "",
-        email: "",
-        phone: "",
-        address: "",
-        description: "",
-      });
-      if (onContactCreated) onContactCreated(newContact);
-    } catch (err) {
-      setError("Error al crear contacto. Revisa los datos.");
-      console.error(err);
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (id) {
+      const existing = contacts.find(c => String(c.id) === id)
+      if (existing) {
+        setForm({
+          name:    existing.name    || '',
+          email:   existing.email   || '',
+          phone:   existing.phone   || '',
+          address: existing.address || ''
+        })
+      }
     }
-  };
+  }, [id, contacts])
+
+  const handleChange = e => {
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = async e => {
+    e.preventDefault()
+    try {
+      if (id) {
+        await editContact(Number(id), form)
+      } else {
+        await addContact(form)
+      }
+      navigate('/')
+    } catch (err) {
+      console.error('Error guardando contacto:', err)
+    }
+  }
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
-      <input
-        name="full_name"
-        value={formData.full_name}
-        onChange={handleChange}
-        placeholder="Nombre completo"
-        required
-      />
-      <input
-        name="email"
-        type="email"
-        value={formData.email}
-        onChange={handleChange}
-        placeholder="Email"
-        required
-      />
-      <input
-        name="phone"
-        value={formData.phone}
-        onChange={handleChange}
-        placeholder="Teléfono"
-        required
-      />
-      <input
-        name="address"
-        value={formData.address}
-        onChange={handleChange}
-        placeholder="Dirección"
-        required
-      />
-      <input
-        name="description"
-        value={formData.description}
-        onChange={handleChange}
-        placeholder="Descripción"
-        required
-      />
+    <div className="container my-5">
+      <h2 className="text-center mb-4">
+        {id ? 'Edit a contact' : 'Add a new contact'}
+      </h2>
+      <form
+        onSubmit={handleSubmit}
+        className="mx-auto"
+        style={{ maxWidth: '500px' }}
+      >
+        {[
+          { label: 'Name',    name: 'name',    type: 'text',  required: true },
+          { label: 'Email',   name: 'email',   type: 'email', required: true },
+          { label: 'Phone',   name: 'phone',   type: 'text',  required: false },
+          { label: 'Address', name: 'address', type: 'text',  required: false }
+        ].map(({ label, name, type, required }) => (
+          <div className="mb-3" key={name}>
+            <label className="form-label">{label}</label>
+            <input
+              className="form-control"
+              name={name}
+              type={type}
+              placeholder={`Enter ${label.toLowerCase()}`}
+              value={form[name]}
+              onChange={handleChange}
+              required={required}
+            />
+          </div>
+        ))}
 
-      <button type="submit" disabled={loading}>
-        {loading ? "Creando..." : "Crear Contacto"}
-      </button>
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-    </form>
-  );
+        <button type="submit" className="btn btn-primary w-100 mb-2">
+          save
+        </button>
+        <div className="text-center">
+          <Link to="/">or get back to contacts</Link>
+        </div>
+      </form>
+    </div>
+  )
 }
